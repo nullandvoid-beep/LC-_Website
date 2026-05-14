@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 import img1 from '../../assets/nitmunxiv/gallery/WhatsApp Image 2026-03-05 at 02.08.37.webp';
 import img2 from '../../assets/nitmunxiv/gallery/WhatsApp Image 2026-03-05 at 02.08.49.webp';
 import img3 from '../../assets/nitmunxiv/gallery/WhatsApp Image 2026-03-05 at 02.08.57.webp';
-import img4 from '../../assets/nitmunxiv/gallery/WhatsApp Image 2026-03-05 at 02.09.05.webp';
 
 export interface TeamGroup {
     id: number;
@@ -38,14 +37,6 @@ const TEAM_YEARS: TeamGroup[] = [
         image: img3,
         color: "#974B60",
         description: "The tireless organizers ensuring every detail is ruthlessly perfected."
-    },
-    {
-        id: 1,
-        name: "1st Year",
-        role: "The Bloodline",
-        image: img4,
-        color: "#f4f4f5",
-        description: "The fresh energy fueling the machine with relentless passion."
     }
 ];
 
@@ -124,7 +115,7 @@ export function Team() {
     const titleOpacity = useTransform(scrollYProgress, [0, 0.20], [1, 0]);
 
     return (
-        <section id="team" ref={containerRef} className="relative w-full h-[600vh] bg-verve-dark border-b-[8px] border-black">
+        <section id="team" ref={containerRef} className="relative w-full h-[400vh] bg-verve-dark border-b-[8px] border-black">
 
             {/* Massive Underlay Title */}
             <motion.div

@@ -64,13 +64,14 @@ function ArcCarousel({ images, scrollProgress }: { images: string[], scrollProgr
     // We want the entire carousel to slightly rotate based on scroll
     // This gives the impression of panning across the 3D cylinder
     const rotateY = useTransform(scrollProgress, [0, 1], [40, -40]);
-    const radius = 1200; // Massively increased radius to push cards outward
+    // Different radius on mobile vs desktop to fit on screen
+    const radius = window.innerWidth < 768 ? 600 : 1200;
 
     return (
-        <div className="relative w-full h-[60vh] md:h-[80vh] flex items-center justify-center overflow-hidden [perspective:2000px] z-20 mt-10">
+        <div className="relative w-full h-[60vh] md:h-[80vh] flex items-center justify-center overflow-hidden [perspective:1000px] md:[perspective:2000px] z-20 mt-6 md:mt-10">
             {/* Gradient fade on edges to mask the cylinder sides */}
-            <div className="absolute inset-y-0 left-0 w-32 md:w-64 bg-gradient-to-r from-verve-dark to-transparent z-30 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-32 md:w-64 bg-gradient-to-l from-verve-dark to-transparent z-30 pointer-events-none" />
+            <div className="absolute inset-y-0 left-0 w-16 md:w-64 bg-gradient-to-r from-verve-dark to-transparent z-30 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-16 md:w-64 bg-gradient-to-l from-verve-dark to-transparent z-30 pointer-events-none" />
 
             <motion.div
                 style={{ rotateY, z: -radius }}
@@ -78,7 +79,7 @@ function ArcCarousel({ images, scrollProgress }: { images: string[], scrollProgr
             >
                 {images.map((img, index) => {
                     const totalItems = images.length;
-                    // Spread items across a much wider angle (120 degrees) so they don't clip
+                    // Spread items across 120 degrees 
                     const angleStep = 120 / (totalItems - 1);
                     const angle = -60 + (index * angleStep);
                     const isCenter = index === Math.floor(totalItems / 2);
@@ -86,7 +87,7 @@ function ArcCarousel({ images, scrollProgress }: { images: string[], scrollProgr
                     return (
                         <div
                             key={index}
-                            className={`absolute w-[50vw] md:w-[28vw] max-w-[400px] h-[50vh] md:h-[60vh] rounded-[2rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] transition-all duration-700 hover:scale-[1.03] cursor-pointer bg-verve-light/5 backdrop-blur-md ${isCenter ? 'border-4 border-verve-gold shadow-[0_0_80px_rgba(252,194,1,0.3)]' : 'border border-white/10'}`}
+                            className={`absolute w-[60vw] md:w-[28vw] max-w-[400px] h-[50vh] md:h-[60vh] rounded-[2rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] transition-all duration-700 hover:scale-[1.03] cursor-pointer bg-verve-light/5 backdrop-blur-md ${isCenter ? 'border-4 border-verve-gold shadow-[0_0_80px_rgba(252,194,1,0.3)]' : 'border border-white/10'}`}
                             style={{
                                 transform: `rotateY(${angle}deg) translateZ(${radius}px)`
                             }}

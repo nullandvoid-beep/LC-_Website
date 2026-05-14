@@ -11,7 +11,7 @@ import { NitmunAdminPanel } from '../components/nitmun/NitmunAdminPanel';
 import { StudyGuidesModal } from '../components/nitmun/StudyGuidesModal';
 import { PhotoGalleryModal } from '../components/nitmun/PhotoGalleryModal';
 import { CommitteeAIAssistant } from '../components/nitmun/CommitteeAIAssistant';
-import { Shield, ChevronDown, BookOpen, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { Shield, ChevronDown, BookOpen, Image as ImageIcon } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 const TARGET_DATE = new Date('2026-03-07T00:00:00+05:30').getTime();
 
@@ -211,19 +211,12 @@ export function NitmunxivPage() {
               <ImageIcon className="w-5 h-5 md:hidden" />
               <span className="hidden md:inline">Gallery</span>
             </button>
-            {isAdmin ? (
+            {isAdmin && (
               <button
                 onClick={() => setShowAdminPanel(true)}
                 className="px-4 py-2 bg-[#974B60] text-white border-[2px] border-black rounded shadow-[2px_2px_0_#000] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none hover:bg-[#c58715] transition-all"
               >
                 Dashboard
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowModal(true)}
-                className="px-4 py-2 bg-white text-black border-[2px] border-black rounded shadow-[2px_2px_0_#000] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none hover:bg-zinc-200 transition-all font-bold"
-              >
-                Register
               </button>
             )}
           </div>
@@ -438,11 +431,11 @@ export function NitmunxivPage() {
 
             {timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 ? (
               <div className="relative z-10 py-8">
-                <h3 className="text-6xl md:text-8xl font-staatliches text-black uppercase tracking-widest mb-4 drop-shadow-[4px_4px_0_#fff] animate-pulse">
-                  NITMUN IS ON!!!!
+                <h3 className="text-6xl md:text-8xl font-staatliches text-black uppercase tracking-widest mb-4 drop-shadow-[4px_4px_0_#fff]">
+                  NITMUN XIV is over
                 </h3>
                 <p className="text-xl md:text-3xl font-antonio font-bold text-white bg-black inline-block px-6 py-2 shadow-[4px_4px_0_#fff] -rotate-2">
-                  A Forum for the Formidable.
+                  See you at NITMUN XV next year
                 </p>
               </div>
             ) : (
@@ -484,7 +477,7 @@ export function NitmunxivPage() {
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.8 }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+              <div className={isAdmin ? "grid grid-cols-1 md:grid-cols-3 gap-6 w-full" : "grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mx-auto"}>
 
                 {/* Study Guides Button */}
                 <button
@@ -512,8 +505,8 @@ export function NitmunxivPage() {
                   </div>
                 </button>
 
-                {/* Register / Admin Button */}
-                {isAdmin ? (
+                {/* Admin Button */}
+                {isAdmin && (
                   <button
                     onClick={() => setShowAdminPanel(true)}
                     className="relative block w-full bg-[#e08585] text-black rounded-xl border-[4px] border-black shadow-[6px_8px_0_#000] overflow-hidden group active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-300 hover:-translate-y-2 hover:-translate-x-2 hover:shadow-[10px_12px_0_#000]"
@@ -523,18 +516,6 @@ export function NitmunxivPage() {
                       <Shield className="w-8 h-8 mb-2" />
                       <span className="text-3xl font-staatliches tracking-wide uppercase">Registrations</span>
                       <span className="text-sm font-mono text-black/80 font-bold leading-tight">Manage and review delegates</span>
-                    </div>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="relative block w-full bg-white text-black rounded-xl border-[4px] border-black shadow-[6px_8px_0_#000] overflow-hidden group active:translate-y-2 active:translate-x-2 active:shadow-none transition-all duration-300 hover:-translate-y-2 hover:-translate-x-2 hover:shadow-[10px_12px_0_#000]"
-                  >
-                    <div className="absolute inset-0 bg-[#e08585] top-[110%] group-hover:top-0 transition-all duration-300 z-0 text-black"></div>
-                    <div className="relative z-10 p-6 md:p-8 flex flex-col items-start gap-2 h-full">
-                      <LinkIcon className="w-8 h-8 mb-2" />
-                      <span className="text-3xl font-staatliches tracking-wide uppercase">Register Now</span>
-                      <span className="text-sm font-mono text-black/80 font-bold leading-tight">Secure your spot for the conference</span>
                     </div>
                   </button>
                 )}

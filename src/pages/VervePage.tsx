@@ -9,6 +9,7 @@ import { Events } from '../components/verve/Events'
 import { Gallery } from '../components/verve/Gallery'
 import { Team } from '../components/verve/Team'
 import { VerveRegistrationModal } from '../components/verve/VerveRegistrationModal'
+import { VerveAdminDashboardModal } from '../components/verve/VerveAdminDashboardModal'
 import { ChevronDown } from 'lucide-react'
 import Lenis from '@studio-freight/lenis'
 import './verve.css'
@@ -23,7 +24,7 @@ export function VervePage() {
   const [aboutText, setAboutText] = useState(defaultAboutText);
   const [lastEditedBy, setLastEditedBy] = useState<string | undefined>();
 
-  const defaultAboutClubText = "Founded decades ago, The Literary Circle serves as the official English literary club of NIT Durgapur. It is a refuge for the bibliophiles, wordsmiths, debaters, and the intellectually curious.\n\nWe don't just organize events; we curate experiences that challenge perspectives and celebrate the unabashed power of words.";
+  const defaultAboutClubText = "In a college teeming with tech clubs and scientific student bodies, the Literary Circle prides itself in being a breath of fresh air, encouraging creativity and free thought.\n\nThe Literary Circle, through events like NITMUN, or Verve, which is East India's largest youth cum literary festival, and Literati helps students to get out of their creative cocoon, engage in healthy debate and exchange ideas among themselves. We don't just organize events; we curate experiences that challenge perspectives and celebrate the unabashed power of words.";
   const [aboutClubText, setAboutClubText] = useState(defaultAboutClubText);
   const [clubLastEditedBy, setClubLastEditedBy] = useState<string | undefined>();
 
@@ -38,6 +39,13 @@ export function VervePage() {
   // Registration Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | undefined>();
+
+  // Dashboard Modal State
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const isLCite = user?.role === 'LCite';
+
+  // Read More Modal State
+  const [readMore, setReadMore] = useState<{ isOpen: boolean, type: 'fest' | 'club' }>({ isOpen: false, type: 'fest' });
 
   const handleRegisterClick = (eventId?: string) => {
     setSelectedEventId(eventId);
@@ -102,7 +110,6 @@ export function VervePage() {
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      touchMultiplier: 2,
     });
     // @ts-ignore
     window.lenis = lenis;
@@ -151,10 +158,10 @@ export function VervePage() {
               <a href="#events" onClick={(e) => { e.preventDefault(); (window as any).lenis?.scrollTo('#events') }} className="hover:text-verve-gold transition-colors interactive">Events</a>
               <a href="#team" onClick={(e) => { e.preventDefault(); (window as any).lenis?.scrollTo('#team') }} className="hover:text-verve-gold transition-colors interactive">Team</a>
               <button
-                onClick={() => handleRegisterClick()}
-                className="bg-verve-gold text-verve-dark px-6 py-2 brutal-border brutal-shadow hover:bg-white transition-colors interactive"
+                onClick={() => isLCite ? setIsDashboardOpen(true) : handleRegisterClick()}
+                className="bg-verve-gold text-verve-dark px-6 py-2 brutal-border brutal-shadow hover:bg-white transition-colors font-black"
               >
-                Register
+                {isLCite ? 'Dashboard' : 'Register'}
               </button>
             </div>
           </div>
@@ -244,6 +251,7 @@ export function VervePage() {
               handleSaveAboutClubText={handleSaveAboutClubText}
               clubLastEditedBy={clubLastEditedBy}
               isLoadingContent={isLoadingContent}
+              onReadMore={(type: 'fest' | 'club') => setReadMore({ isOpen: true, type })}
             />
             {/* Scroll Down Prompt for About */}
             <motion.div
@@ -258,7 +266,7 @@ export function VervePage() {
           </div>
         </section>
 
-        <Events onRegisterClick={handleRegisterClick} />
+        <Events onRegisterClick={(eventId) => isLCite ? setIsDashboardOpen(true) : handleRegisterClick(eventId)} />
         <Gallery />
         <Team />
 
@@ -270,10 +278,10 @@ export function VervePage() {
               READY?
             </h2>
             <button
-              onClick={() => handleRegisterClick()}
+              onClick={() => isLCite ? setIsDashboardOpen(true) : handleRegisterClick()}
               className="bg-verve-gold text-verve-dark px-12 py-5 text-xl md:text-3xl font-heading font-bold brutal-border hover:bg-white transition-colors interactive shadow-[0_8px_0_#000]"
             >
-              SECURE YOUR SPOT
+              {isLCite ? 'VIEW DASHBOARD' : 'SECURE YOUR SPOT'}
             </button>
             <p className="mt-12 font-mono text-white/50 text-sm uppercase tracking-widest">
               The Literary Circle © 2026
@@ -288,11 +296,74 @@ export function VervePage() {
         onClose={() => setIsModalOpen(false)}
         initialEventId={selectedEventId}
       />
+
+      <VerveAdminDashboardModal
+        isOpen={isDashboardOpen}
+        onClose={() => setIsDashboardOpen(false)}
+      />
+
+      {/* Read More Modal */}
+      <AnimatePresence>
+        {readMore.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-md"
+            data-lenis-prevent="true"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className={`w-full max-w-3xl max-h-[85vh] md:max-h-[80vh] flex flex-col rounded-[2rem] shadow-2xl overflow-hidden border-2 flex-grow ${readMore.type === 'fest' ? 'bg-verve-dark border-white/10' : 'bg-verve-gold border-black/10'}`}
+            >
+              {/* Modal Header */}
+              <div className={`flex justify-between items-center p-6 md:p-8 border-b shrink-0 ${readMore.type === 'fest' ? 'border-white/10' : 'border-black/10'}`}>
+                <h3 className={`text-2xl md:text-3xl lg:text-4xl font-heading uppercase tracking-wider ${readMore.type === 'fest' ? 'text-verve-gold' : 'text-black'}`}>
+                  {readMore.type === 'fest' ? "The Fest Manifesto" : "The Club Manifesto"}
+                </h3>
+                <button
+                  onClick={() => setReadMore({ ...readMore, isOpen: false })}
+                  className={`p-2 rounded-full transition-colors ${readMore.type === 'fest' ? 'hover:bg-white/10 text-white' : 'hover:bg-black/10 text-black'}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Modal Body (Scrollable) */}
+              <div className="p-6 md:p-8 overflow-y-auto hide-scrollbar flex-1">
+                <div className={`font-mono leading-relaxed whitespace-pre-wrap text-sm md:text-base h-full ${readMore.type === 'fest' ? 'text-white/80' : 'text-black/80'}`}>
+                  {readMore.type === 'fest' ? (
+                    <EditableText
+                      value={aboutText}
+                      onSave={handleSaveAboutText}
+                      canEdit={Boolean(isAdmin)}
+                      className={`font-mono p-4 rounded-xl border border-transparent transition-colors ${isAdmin ? 'hover:border-verve-gold/50 bg-white/5' : ''}`}
+                      showLastEdited={Boolean(isAdmin)}
+                      lastEditedBy={lastEditedBy}
+                    />
+                  ) : (
+                    <EditableText
+                      value={aboutClubText}
+                      onSave={handleSaveAboutClubText}
+                      canEdit={Boolean(isAdmin)}
+                      className={`font-mono p-4 rounded-xl border border-transparent transition-colors ${isAdmin ? 'hover:border-black/50 bg-black/5' : ''} !text-black`}
+                      showLastEdited={Boolean(isAdmin)}
+                      lastEditedBy={clubLastEditedBy}
+                    />
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function AboutSectionContent({ scrollYProgress, isAdmin, aboutText, handleSaveAboutText, lastEditedBy, isLoadingContent, aboutClubText, handleSaveAboutClubText, clubLastEditedBy }: any) {
+function AboutSectionContent({ scrollYProgress, isAdmin, aboutText, handleSaveAboutText, isLoadingContent, aboutClubText, handleSaveAboutClubText, onReadMore }: any) {
   // Determine widths
   const yellowWidth = useTransform(scrollYProgress, [0.2, 0.8], ["15%", "85%"]);
   const darkWidth = useTransform(scrollYProgress, [0.2, 0.8], ["85%", "15%"]);
@@ -306,118 +377,139 @@ function AboutSectionContent({ scrollYProgress, isAdmin, aboutText, handleSaveAb
   const darkTitleOpacity = useTransform(scrollYProgress, [0.6, 0.8], [0, 1]);
 
   return (
-    <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
-      <div className="flex w-full max-w-[95vw] lg:max-w-7xl h-[600px] xl:h-[700px] gap-3 md:gap-6 items-center justify-center px-2 md:px-8">
+    <>
+      <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+        <div className="flex w-full max-w-[95vw] lg:max-w-7xl h-[75vh] md:h-[600px] xl:h-[700px] gap-3 md:gap-6 items-center justify-center px-2 md:px-8">
 
-        {/* State 1: About Verve (LEFT, DARK, SHRINKS) */}
-        <motion.div
-          style={{ width: darkWidth }}
-          className="h-full bg-verve-dark/80 backdrop-blur-xl border-2 border-white/10 rounded-[2rem] p-4 md:p-8 lg:p-12 relative overflow-hidden group interactive flex flex-col justify-center shadow-2xl origin-left"
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-verve-pink/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-verve-pink/20 transition-colors duration-700 pointer-events-none" />
-
-          {/* Compressed Vertical Title */}
+          {/* State 1: About Verve (LEFT, DARK, SHRINKS) */}
           <motion.div
-            style={{ opacity: darkTitleOpacity }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ width: darkWidth }}
+            className="h-full bg-verve-dark/80 backdrop-blur-xl border-2 border-white/10 rounded-[2rem] p-4 md:p-8 lg:p-12 relative overflow-hidden group interactive flex flex-col justify-center shadow-2xl origin-left"
           >
-            <h2 className="text-4xl lg:text-5xl font-heading text-verve-gold uppercase tracking-wide -rotate-90 whitespace-nowrap origin-center">
-              01 // THE FEST
-            </h2>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-verve-pink/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-verve-pink/20 transition-colors duration-700 pointer-events-none" />
+
+            {/* Compressed Vertical Title */}
+            <motion.div
+              style={{ opacity: darkTitleOpacity }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <h2 className="text-4xl lg:text-5xl font-heading text-verve-gold uppercase tracking-wide -rotate-90 whitespace-nowrap origin-center">
+                01 // THE FEST
+              </h2>
+            </motion.div>
+
+            {/* Full Expanded Content */}
+            <motion.div
+              style={{ opacity: darkContentOpacity }}
+              className="absolute inset-y-0 left-0 w-[78vw] md:w-[70vw] lg:w-[55vw] max-w-[800px] px-6 py-12 md:p-12 pb-12 flex flex-col justify-start md:justify-center items-start overflow-hidden"
+              data-lenis-prevent="true"
+            >
+              <div className="inline-block px-4 py-2 rounded-full bg-verve-gold/20 text-verve-gold font-sans font-bold text-xs tracking-wider mb-4 md:mb-8 shrink-0">
+                01 // THE FEST
+              </div>
+              <h2 className="text-[1.75rem] leading-none sm:text-4xl md:text-5xl lg:text-7xl font-heading text-white uppercase tracking-wide mb-4 md:mb-8 interactive w-full break-words shrink-0">
+                Eastern India's <span className="text-verve-pink">Largest</span>
+              </h2>
+              <div className="text-sm md:text-lg font-mono leading-relaxed text-white/80 w-[95%] md:w-full max-w-2xl whitespace-normal break-words shrink-0 relative flex-1 min-h-0 flex flex-col">
+                {isLoadingContent ? (
+                  <p className="animate-pulse">Loading content...</p>
+                ) : (
+                  <>
+                    <div className="relative overflow-hidden md:overflow-y-auto flex-1 mask-bottom md:mask-none md:pb-12 hide-scrollbar">
+                      <EditableText
+                        value={aboutText}
+                        onSave={handleSaveAboutText}
+                        canEdit={Boolean(isAdmin)}
+                        className="font-mono bg-white/5 p-3 md:p-4 rounded-xl border border-white/5 hover:border-verve-gold/50 transition-colors whitespace-pre-wrap inline-block pointer-events-none md:pointer-events-auto md:w-full"
+                        showLastEdited={false}
+                        lastEditedBy={undefined}
+                      />
+                      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#141619] via-[#141619]/80 to-transparent pointer-events-none md:hidden" />
+                    </div>
+                    <button
+                      onClick={() => onReadMore('fest')}
+                      className="mt-2 group interactive flex md:hidden items-center gap-2 text-sm md:text-base font-heading text-verve-gold hover:text-white transition-colors pointer-events-auto shrink-0 w-max z-10 relative bg-[#141619] pr-4 pt-2"
+                    >
+                      ...READ MORE
+                      <span className="block w-6 h-[2px] bg-verve-gold group-hover:w-10 group-hover:bg-white transition-all duration-300" />
+                    </button>
+                    {isAdmin && (
+                      <p className="text-xs text-verve-gold mt-2 font-sans font-bold uppercase tracking-wider block pl-3 border-l-2 border-verve-gold shrink-0 md:hidden">
+                        Admin: Click 'Read More' to edit
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
           </motion.div>
 
-          {/* Full Expanded Content */}
+          {/* State 2: About Literary Circle (RIGHT, YELLOW, EXPANDS) */}
           <motion.div
-            style={{ opacity: darkContentOpacity }}
-            className="absolute inset-y-0 left-0 w-[80vw] lg:w-[60vw] max-w-[900px] p-6 md:p-12 flex flex-col justify-center items-start overflow-hidden hide-scrollbar"
+            style={{ width: yellowWidth }}
+            className="h-full bg-verve-gold rounded-[2rem] p-4 md:p-8 lg:p-12 relative overflow-hidden group interactive flex flex-col justify-center shadow-2xl origin-right"
           >
-            <div className="inline-block px-4 py-2 rounded-full bg-verve-gold/20 text-verve-gold font-sans font-bold text-xs md:text-sm tracking-wider mb-4 md:mb-8 shrink-0">
-              01 // THE FEST
-            </div>
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading text-white uppercase tracking-wide mb-4 md:mb-8 interactive w-max shrink-0">
-              Eastern India's <span className="text-verve-pink">Largest</span>
-            </h2>
-            <div className="text-sm md:text-lg font-mono leading-relaxed text-white/80 max-w-2xl whitespace-normal break-words shrink-0">
-              {isLoadingContent ? (
-                <p className="animate-pulse">Loading content...</p>
-              ) : (
-                <div className="relative">
-                  <EditableText
-                    value={aboutText}
-                    onSave={handleSaveAboutText}
-                    canEdit={Boolean(isAdmin)}
-                    className="font-mono bg-white/5 p-3 md:p-4 rounded-xl border border-white/5 hover:border-verve-gold/50 transition-colors whitespace-pre-wrap inline-block"
-                    showLastEdited={Boolean(isAdmin)}
-                    lastEditedBy={lastEditedBy}
-                  />
-                  {isAdmin && !isLoadingContent && (
-                    <p className="text-xs text-verve-gold mt-2 font-sans font-bold uppercase tracking-wider block pl-3 border-l-2 border-verve-gold">
-                      Admin: Hover over text to edit
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-            <button className="mt-6 md:mt-8 group interactive flex items-center gap-3 text-sm md:text-xl font-heading text-verve-gold hover:text-white transition-colors pointer-events-auto shrink-0 w-max">
-              READ FULL MANIFESTO
-              <span className="block w-8 md:w-12 h-[2px] bg-verve-gold group-hover:w-16 md:group-hover:w-24 group-hover:bg-white transition-all duration-300" />
-            </button>
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
+
+            {/* Compressed Vertical Title */}
+            <motion.div
+              style={{ opacity: yellowTitleOpacity }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <h2 className="text-4xl lg:text-5xl font-heading text-black uppercase tracking-wide -rotate-90 whitespace-nowrap origin-center">
+                02 // THE CLUB
+              </h2>
+            </motion.div>
+
+            {/* Full Expanded Content */}
+            <motion.div
+              style={{ opacity: yellowContentOpacity }}
+              className="absolute inset-y-0 left-0 w-[78vw] md:w-[70vw] lg:w-[55vw] max-w-[800px] px-6 py-12 md:p-12 pb-12 flex flex-col justify-start md:justify-center items-start overflow-hidden"
+              data-lenis-prevent="true"
+            >
+              <div className="inline-block px-4 py-2 rounded-full bg-black/10 text-black font-sans font-bold text-xs tracking-wider mb-4 md:mb-8 shrink-0">
+                02 // THE CLUB
+              </div>
+              <h2 className="text-[1.75rem] leading-none sm:text-4xl md:text-5xl lg:text-7xl font-heading text-black uppercase tracking-wide mb-4 md:mb-8 interactive w-full break-words shrink-0">
+                The Literary <br className="block md:hidden" /> Circle
+              </h2>
+              <div className="text-sm md:text-lg font-mono leading-relaxed text-black/80 w-[95%] md:w-full max-w-2xl whitespace-normal break-words shrink-0 relative flex-1 min-h-0 flex flex-col">
+                {isLoadingContent ? (
+                  <p className="animate-pulse">Loading content...</p>
+                ) : (
+                  <>
+                    <div className="relative overflow-hidden md:overflow-y-auto flex-1 mask-bottom md:mask-none md:pb-12 hide-scrollbar">
+                      <EditableText
+                        value={aboutClubText}
+                        onSave={handleSaveAboutClubText}
+                        canEdit={Boolean(isAdmin)}
+                        className="font-mono bg-black/5 p-3 md:p-4 rounded-xl border border-black/5 hover:border-black/50 transition-colors whitespace-pre-wrap inline-block w-full !text-black pointer-events-none md:pointer-events-auto"
+                        showLastEdited={false}
+                        lastEditedBy={undefined}
+                      />
+                      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-verve-gold via-verve-gold/80 to-transparent pointer-events-none md:hidden" />
+                    </div>
+                    <button
+                      onClick={() => onReadMore('club')}
+                      className="mt-2 group interactive flex md:hidden items-center gap-2 text-sm md:text-base font-heading text-black hover:text-black/60 transition-colors pointer-events-auto shrink-0 w-max z-10 relative bg-verve-gold pr-4 pt-2"
+                    >
+                      ...READ MORE
+                      <span className="block w-6 h-[2px] bg-black group-hover:w-10 group-hover:bg-black/60 transition-all duration-300" />
+                    </button>
+                    {isAdmin && (
+                      <p className="text-xs text-black mt-2 font-sans font-bold uppercase tracking-wider block pl-3 border-l-2 border-black shrink-0 md:hidden">
+                        Admin: Click 'Read More' to edit
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
 
-        {/* State 2: About Literary Circle (RIGHT, YELLOW, EXPANDS) */}
-        <motion.div
-          style={{ width: yellowWidth }}
-          className="h-full bg-verve-gold rounded-[2rem] p-4 md:p-8 lg:p-12 relative overflow-hidden group interactive flex flex-col justify-center shadow-2xl origin-right"
-        >
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay" />
-
-          {/* Compressed Vertical Title */}
-          <motion.div
-            style={{ opacity: yellowTitleOpacity }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          >
-            <h2 className="text-4xl lg:text-5xl font-heading text-black uppercase tracking-wide -rotate-90 whitespace-nowrap origin-center">
-              02 // THE CLUB
-            </h2>
-          </motion.div>
-
-          {/* Full Expanded Content */}
-          <motion.div
-            style={{ opacity: yellowContentOpacity }}
-            className="absolute inset-y-0 left-0 w-[80vw] lg:w-[60vw] max-w-[900px] p-6 md:p-12 flex flex-col justify-center items-start overflow-hidden hide-scrollbar"
-          >
-            <div className="inline-block px-4 py-2 rounded-full bg-black/10 text-black font-sans font-bold text-xs md:text-sm tracking-wider mb-4 md:mb-8 shrink-0">
-              02 // THE CLUB
-            </div>
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading text-black uppercase tracking-wide mb-4 md:mb-8 interactive w-max shrink-0">
-              The Literary Circle
-            </h2>
-            <div className="text-sm md:text-lg font-mono leading-relaxed text-black/80 max-w-2xl whitespace-normal break-words shrink-0 w-full relative">
-              {isLoadingContent ? (
-                <p className="animate-pulse">Loading content...</p>
-              ) : (
-                <div className="relative">
-                  <EditableText
-                    value={aboutClubText}
-                    onSave={handleSaveAboutClubText}
-                    canEdit={Boolean(isAdmin)}
-                    className="font-mono bg-black/5 p-3 md:p-4 rounded-xl border border-black/5 hover:border-black/50 transition-colors whitespace-pre-wrap inline-block w-full !text-black"
-                    showLastEdited={Boolean(isAdmin)}
-                    lastEditedBy={clubLastEditedBy}
-                  />
-                  {isAdmin && !isLoadingContent && (
-                    <p className="text-xs text-black mt-2 font-sans font-bold uppercase tracking-wider block pl-3 border-l-2 border-black">
-                      Admin: Hover over text to edit
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </motion.div>
-
+        </div>
       </div>
-    </div>
+
+    </>
   );
 }

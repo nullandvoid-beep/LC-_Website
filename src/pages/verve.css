@@ -26,7 +26,7 @@
   }
 
   .brutal-shadow {
-    @apply shadow-[6px_8px_0_#000] md:shadow-[10px_12px_0_#000] active:shadow-none active:translate-x-[6px] active:translate-y-[8px] md:active:translate-x-[20px] md:active:translate-y-[24px] focus:shadow-none focus:translate-x-[6px] focus:translate-y-[8px] md:focus:translate-x-[20px] md:focus:translate-y-[24px] transition-all duration-75 ease-in;
+    @apply shadow-[6px_8px_0_#000] md:shadow-[10px_12px_0_#000] active:shadow-[2px_2px_0_#000] active:translate-x-[4px] active:translate-y-[6px] md:active:translate-x-[8px] md:active:translate-y-[10px] focus:shadow-none focus:translate-x-[6px] focus:translate-y-[8px] md:focus:translate-x-[10px] md:focus:translate-y-[12px] transition-all duration-75 ease-in;
   }
 
   .text-glow-gold {

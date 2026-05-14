@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ChevronDown, Users, X } from 'lucide-react';
+import { Plus, ChevronDown, Users, X, Search } from 'lucide-react';
 import { Header, Footer } from '../components/layout';
 import { SEO } from '../components/SEO';
 import { AlumniCard, AlumniFormModal, AlumniDetailsModal } from '../components/alumni';
@@ -19,6 +19,7 @@ export function AlumniPage() {
     const [editingMember, setEditingMember] = useState<AlumniMember | null>(null);
     const [selectedMember, setSelectedMember] = useState<AlumniMember | null>(null);
     const [selectedYearForAdd, setSelectedYearForAdd] = useState<number | undefined>(undefined);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const canAdd = user && user.role !== 'student';
 
@@ -78,6 +79,30 @@ export function AlumniPage() {
         .map(Number)
         .sort((a, b) => b - a);
 
+    const filteredAlumniByYear = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return alumniByYear;
+
+        const result: Record<number, AlumniMember[]> = {};
+        for (const [year, members] of Object.entries(alumniByYear)) {
+            const filtered = members.filter(m =>
+                m.name.toLowerCase().includes(q) ||
+                (m.workplace && m.workplace.toLowerCase().includes(q)) ||
+                (m.isPresident && 'president'.includes(q))
+            );
+            if (filtered.length > 0) {
+                result[Number(year)] = filtered;
+            }
+        }
+        return result;
+    }, [searchQuery, alumniByYear]);
+
+    const filteredSortedYears = sortedYears.filter(year => filteredAlumniByYear[year]);
+
+    const totalResults = useMemo(() => {
+        return Object.values(filteredAlumniByYear).reduce((sum, arr) => sum + arr.length, 0);
+    }, [filteredAlumniByYear]);
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <SEO
@@ -114,6 +139,32 @@ export function AlumniPage() {
                         )}
                     </div>
 
+                    <div className="relative mb-8">
+                        <div className="relative max-w-xl">
+                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Search by name or company..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full pl-11 pr-10 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent text-gray-800 placeholder-gray-400 font-spectral transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            )}
+                        </div>
+                        {searchQuery.trim() && (
+                            <p className="text-sm text-gray-500 mt-2 ml-1 font-spectral">
+                                {totalResults} result{totalResults !== 1 ? 's' : ''} found
+                            </p>
+                        )}
+                    </div>
+
                     {isLoading ? (
                         <div className="flex justify-center py-20">
                             <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
@@ -124,11 +175,18 @@ export function AlumniPage() {
                             <p className="text-xl">No alumni records found yet.</p>
                             {canAdd && <p className="mt-2 text-sm">Be the first to add one!</p>}
                         </div>
+                    ) : filteredSortedYears.length === 0 && searchQuery.trim() ? (
+                        <div className="text-center py-20 text-gray-500">
+                            <Search size={48} className="mx-auto mb-4 opacity-20" />
+                            <p className="text-xl">No alumni match "{searchQuery}"</p>
+                            <p className="mt-2 text-sm">Try a different name or company.</p>
+                        </div>
                     ) : (
                         <div className="space-y-8">
-                            {sortedYears.map(year => {
-                                const members = alumniByYear[year];
-                                const isExpanded = expandedYears[year];
+                            {filteredSortedYears.map(year => {
+                                const members = filteredAlumniByYear[year];
+                                const isSearching = searchQuery.trim().length > 0;
+                                const isExpanded = isSearching || expandedYears[year];
 
                                 const sortedMembers = [...members].sort((a, b) => {
                                     return a.name.localeCompare(b.name);

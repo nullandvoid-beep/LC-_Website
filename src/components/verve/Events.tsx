@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 export interface EventData {
     id: string;
@@ -9,15 +9,16 @@ export interface EventData {
     time: string;
     venue: string;
     color: string;
+    poster?: string;
 }
 
 export const EVENTS_DATA: EventData[] = [
     {
-        id: "open-mic",
-        title: "Open Mic",
-        description: "Step up to the mic and let your voice be heard! A platform for poets, storytellers, and musicians to mesmerize the audience.",
+        id: "vocab",
+        title: "Vocab",
+        description: "A battle of vocabulary and wit! Prove your linguistic dominance in this intense vocabulary challenge.",
         date: "16th March",
-        time: "6:00 PM",
+        time: "TBD",
         venue: "SAC",
         color: "#e08585",
     },
@@ -26,36 +27,45 @@ export const EVENTS_DATA: EventData[] = [
         title: "Literati",
         description: "Test your literary prowess. Dive into word games, literary quizzes, and trivia that will challenge the bibliophile in you.",
         date: "17th March",
-        time: "5:30 PM",
+        time: "TBD",
         venue: "Main Stage",
         color: "#fcc201",
+    },
+    {
+        id: "wild-card",
+        title: "Wild Card",
+        description: "Expect the unexpected! A surprise event that will test your creativity, wit, and spontaneity.",
+        date: "17th March",
+        time: "TBD",
+        venue: "TBD",
+        color: "#ff3e3e",
     },
     {
         id: "treasure-hunt",
         title: "Treasure Hunt",
         description: "The most anticipated event of the fest! Solve cryptic clues and race across the campus to unearth the hidden treasure.",
         date: "18th March",
-        time: "11:00 AM",
+        time: "TBD",
         venue: "Oval Stands",
         color: "#c084fc",
     },
     {
-        id: "chronorate",
-        title: "Chronorate",
-        description: "Engage in a battle of intellects. A formal debate competition discussing pressing issues and challenging perspectives.",
-        date: "17th March",
-        time: "7:00 PM",
-        venue: "Assembly Hall",
-        color: "#ff3e3e",
+        id: "public-speaking",
+        title: "Public Speaking",
+        description: "Step up to the podium and captivate the crowd! Showcase your oratory skills in this electrifying public speaking contest.",
+        date: "18th March",
+        time: "TBD",
+        venue: "TBD",
+        color: "#1dfa82",
     },
     {
-        id: "velmora",
-        title: "Velmora",
-        description: "A multifaceted competition spanning multiple days. Prove your mettle in various literary and creative challenges.",
-        date: "16th March",
-        time: "7:00 PM",
-        venue: "LG 23 / SAC",
-        color: "#1dfa82",
+        id: "open-mic",
+        title: "Open Mic",
+        description: "The stage is yours! Poetry, storytelling, stand-up, or anything in between — grab the mic and let your voice be heard.",
+        date: "18th March",
+        time: "TBD",
+        venue: "TBD",
+        color: "#38bdf8",
     }
 ];
 
@@ -70,41 +80,60 @@ export function Events({ onRegisterClick }: EventsProps) {
         offset: ["start start", "end end"]
     });
 
-    const x = useTransform(scrollYProgress, [0, 1], ["0%", "-100%"]);
+    const smoothScrollYProgress = useSpring(scrollYProgress, {
+        stiffness: 100,
+        damping: 30,
+        restDelta: 0.001
+    });
+
+    const x = useTransform(smoothScrollYProgress, [0, 1], ["0%", "-100%"]);
 
     // Background parallax & marquees
-    const marqueeX1 = useTransform(scrollYProgress, [0, 1], ["0%", "-30%"]);
-    const marqueeX2 = useTransform(scrollYProgress, [0, 1], ["-30%", "0%"]);
+    const marqueeX1 = useTransform(smoothScrollYProgress, [0, 1], ["0%", "-30%"]);
+    const marqueeX2 = useTransform(smoothScrollYProgress, [0, 1], ["-30%", "0%"]);
 
     const [activeDateIndex, setActiveDateIndex] = useState(0);
     const uniqueDates = Array.from(new Set(EVENTS_DATA.map(e => e.date))).sort();
 
     useEffect(() => {
-        return scrollYProgress.onChange((latest) => {
+        return smoothScrollYProgress.onChange((latest) => {
             const index = Math.min(
                 uniqueDates.length - 1,
                 Math.floor(latest * uniqueDates.length)
             );
             setActiveDateIndex(index);
         });
-    }, [scrollYProgress, uniqueDates]);
+    }, [smoothScrollYProgress, uniqueDates]);
 
     const groupedData: { date: string, times: { time: string, events: EventData[] }[] }[] = [];
     uniqueDates.forEach(date => {
         const eventsForDate = EVENTS_DATA.filter(event => event.date === date);
-        const eventsByTime: Record<string, typeof EVENTS_DATA> = {};
+        const timeBlocks: { time: string, events: EventData[] }[] = [];
 
-        eventsForDate.forEach(event => {
-            if (!eventsByTime[event.time]) eventsByTime[event.time] = [];
-            eventsByTime[event.time].push(event);
+        eventsForDate.forEach((event, index) => {
+            if (event.time.toLowerCase() === 'tbd') {
+                // Each TBD event gets its own time block
+                timeBlocks.push({
+                    time: `TBD-${index}`, // Unique key for rendering, we'll strip the -index later
+                    events: [event]
+                });
+            } else {
+                // Group non-TBD events by time
+                let existingBlock = timeBlocks.find(b => b.time === event.time);
+                if (existingBlock) {
+                    existingBlock.events.push(event);
+                } else {
+                    timeBlocks.push({
+                        time: event.time,
+                        events: [event]
+                    });
+                }
+            }
         });
 
         groupedData.push({
             date,
-            times: Object.keys(eventsByTime).sort().map(time => ({
-                time,
-                events: eventsByTime[time]
-            }))
+            times: timeBlocks
         });
     });
 
@@ -165,19 +194,27 @@ export function Events({ onRegisterClick }: EventsProps) {
                                     <div key={`${dayGroup.date}-${timeBlock.time}`} className="flex gap-8 md:gap-16 items-center shrink-0 h-full">
 
                                         {/* BRUTALIST TIME STAMP */}
-                                        <div className="flex flex-col items-center bg-white text-black p-4 border-[4px] border-black shadow-[8px_8px_0_#e08585] shrink-0 rotate-[-4deg] hover:rotate-0 transition-transform duration-300 pointer-events-auto">
-                                            <span className="text-4xl md:text-7xl font-sans font-black tracking-tighter leading-none">
-                                                {timeBlock.time.split(' ')[0]}
-                                            </span>
-                                            <span className="text-xl md:text-3xl font-mono font-bold uppercase mt-1">
-                                                {timeBlock.time.split(' ')[1] || '---'}
-                                            </span>
+                                        <div className="flex flex-col items-center justify-center bg-white text-black p-4 border-[4px] border-black shadow-[8px_8px_0_#e08585] shrink-0 rotate-[-4deg] hover:rotate-0 transition-transform duration-300 pointer-events-auto min-w-[120px] min-h-[120px]">
+                                            {timeBlock.time.toLowerCase().startsWith('tbd') ? (
+                                                <span className="text-5xl md:text-7xl font-sans font-black tracking-tighter leading-none">
+                                                    TBD
+                                                </span>
+                                            ) : (
+                                                <>
+                                                    <span className="text-4xl md:text-7xl font-sans font-black tracking-tighter leading-none">
+                                                        {timeBlock.time.split(' ')[0]}
+                                                    </span>
+                                                    <span className="text-xl md:text-3xl font-mono font-bold uppercase mt-1">
+                                                        {timeBlock.time.split(' ')[1] || '---'}
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
 
                                         {/* EVENT CARDS */}
                                         <div className="flex gap-8 md:gap-16 shrink-0 items-center h-full">
                                             {timeBlock.events.map((event, eventIdx) => (
-                                                <div key={event.id} className="w-[85vw] md:w-[60vw] lg:w-[45vw] lg:max-w-[600px] shrink-0 h-[60vh] min-h-[380px] max-h-[500px]">
+                                                <div key={event.id} className="w-[85vw] md:w-[60vw] lg:w-[45vw] lg:max-w-[600px] shrink-0 h-[60vh] min-h-[400px] max-h-[500px]">
                                                     <EventCard event={event} index={eventIdx} onRegister={() => onRegisterClick?.(event.id)} />
                                                 </div>
                                             ))}
@@ -215,7 +252,7 @@ function EventCard({ event, index, onRegister }: EventCardProps) {
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-            whileInView={{ opacity: 1, scale: 1, rotate: index % 2 === 0 ? 3 : -3 }}
+            whileInView={{ opacity: 1, scale: 1, rotate: index % 2 === 0 ? 3 : 2 }}
             viewport={{ once: true, margin: "100px" }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             onHoverStart={() => setIsHovered(true)}
@@ -239,12 +276,29 @@ function EventCard({ event, index, onRegister }: EventCardProps) {
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="mt-auto z-10 flex flex-col gap-4">
-                    <h3 className={`text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter leading-[0.85] ${isHovered ? 'text-black' : 'text-white'}`} style={{ textShadow: isHovered ? 'none' : `4px 4px 0px ${event.color}` }}>
-                        {event.title}
-                    </h3>
+                {/* Title & Poster Space Wrapper */}
+                <div className="flex w-full mt-4 h-32 md:h-48 gap-4 items-stretch">
+                    {/* Title Area */}
+                    <div className="flex-1 flex flex-col justify-end pb-2">
+                        <h3 className={`text-4xl md:text-5xl lg:text-6xl font-heading font-black uppercase tracking-tighter leading-[0.85] ${isHovered ? 'text-black' : 'text-white'}`} style={{ textShadow: isHovered ? 'none' : `4px 4px 0px ${event.color}` }}>
+                            {event.title}
+                        </h3>
+                    </div>
 
+                    {/* Poster Space */}
+                    <div className={`w-1/2 h-full border-[2px] border-black overflow-hidden flex-shrink-0 relative transition-colors ${isHovered ? 'bg-black/10' : 'bg-white/5'}`}>
+                        {event.poster ? (
+                            <img src={event.poster} alt={`${event.title} poster`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" />
+                        ) : (
+                            <div className={`w-full h-full flex flex-col items-center justify-center font-mono text-xs uppercase tracking-widest bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-50 mix-blend-overlay ${isHovered ? 'text-black' : 'text-white/50'}`}>
+                                <span className="opacity-70">Poster Space</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="mt-auto z-10 flex flex-col gap-4 pt-4">
                     <p className={`font-mono text-xs md:text-sm p-3 border-[2px] transition-colors ${isHovered ? 'bg-black/90 text-white border-black' : 'bg-black/50 text-white/90 border-white/20 backdrop-blur-md'}`}>
                         {event.description}
                     </p>
